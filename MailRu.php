@@ -36,8 +36,6 @@ class MailRu extends OAuth2
      */
     public $apiBaseUrl = 'http://www.appsmail.ru/platform/api?method=';
 
-    public $api_method;
-
     /**
      * @inheritdoc
      */
@@ -55,10 +53,12 @@ class MailRu extends OAuth2
         parent::applyAccessTokenToRequest($request, $accessToken);
 
         $data = $request->getData();
+        $data['method'] = str_replace('/', '', $request->getUrl());
         $data['uids'] = $accessToken->getParam('x_mailru_vid');
         $data['app_id'] = $this->clientId;
         $data['secure'] = 1;
         $data['sig'] = $this->sig($data, $this->clientSecret);
+        $request->setUrl('');
         $request->setData($data);
     }
 
@@ -68,7 +68,6 @@ class MailRu extends OAuth2
      * @return string
      */
     public function sig(array $request_params, $secret_key) {
-        $request_params['method'] = $this->api_method;
         ksort($request_params);
         $params = '';
         foreach ($request_params as $key => $value) {
