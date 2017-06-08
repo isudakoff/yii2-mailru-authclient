@@ -39,62 +39,6 @@ class MailRu extends OAuth2
     public $api_method;
 
     /**
-     * This method is overriden because mail.ru has custom  URL format
-     *
-     * @param string $apiSubUrl
-     * @param string $method
-     * @param array $params
-     * @param array $headers
-     * @return array
-     * @throws Exception
-     */
-    public function api($apiSubUrl, $method = 'GET', array $params = [], array $headers = [])
-    {
-        $url = $this->apiBaseUrl . $apiSubUrl;
-        $this->api_method = $apiSubUrl;
-        $accessToken = $this->getAccessToken();
-        if (!is_object($accessToken) || !$accessToken->getIsValid()) {
-            throw new Exception('Invalid access token.');
-        }
-        return $this->apiInternal($accessToken, $url, $method, $params, $headers);
-    }
-
-    /**
-     * Return clientId
-     *
-     * @return string
-     */
-    public function getClientId()
-    {
-        return $this->clientId;
-    }
-
-    /**
-     * return clientSecret
-     *
-     * @return string
-     */
-    public function getClientSecret()
-    {
-        return $this->clientSecret;
-    }
-
-    /**
-     * Generate signature for API mail.ru
-     *
-     * @return string
-     */
-    public function getSignature(array $request_params, $secret_key) {
-        $request_params['method'] = $this->api_method;
-        ksort($request_params);
-        $params = '';
-        foreach ($request_params as $key => $value) {
-            $params .= "$key=$value";
-        }
-        return md5($params . $secret_key);
-    }
-
-    /**
      * @inheritdoc
      */
     protected function initUserAttributes()
@@ -106,15 +50,31 @@ class MailRu extends OAuth2
     /**
      * @inheritdoc
      */
-    protected function apiInternal($accessToken, $url, $method, array $params, array $headers)
+    public function applyAccessTokenToRequest($request, $accessToken)
     {
-        $params['uids'] = $accessToken->getParam('x_mailru_vid');
-        $params['app_id'] = $this->getClientId();
-        $params['secure'] = 1;
-        $secret = $this->getClientSecret();
-        $sig = $this->getSignature($params, $secret);
-        $params['sig'] = $sig;
-        return $this->sendRequest($method, $url, $params, $headers);
+        parent::applyAccessTokenToRequest($request, $accessToken);
+
+        $data = $request->getData();
+        $data['uids'] = $accessToken->getParam('x_mailru_vid');
+        $data['app_id'] = $this->clientId;
+        $data['secure'] = 1;
+        $data['sig'] = $this->sig($data, $this->clientSecret);
+        $request->setData($data);
+    }
+
+    /**
+     * Generate signature for API mail.ru
+     *
+     * @return string
+     */
+    public function sig(array $request_params, $secret_key) {
+        $request_params['method'] = $this->api_method;
+        ksort($request_params);
+        $params = '';
+        foreach ($request_params as $key => $value) {
+            $params .= "$key=$value";
+        }
+        return md5($params . $secret_key);
     }
 
     /**
