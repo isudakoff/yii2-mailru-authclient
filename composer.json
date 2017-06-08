@@ -1,0 +1,22 @@
+{
+  "name": "isudakoff/yii2-mailru-authclient",
+  "description": "MailRu extension for using via yii2-authclient",
+  "keywords": ["yii2", "authclient", "oauth", "mailru"],
+  "homepage": "http://github.com/isudakoff/yii2-mailru-authclient",
+  "require": {
+    "yiisoft/yii2-authclient": "~2.0@dev"
+  },
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Ilya Sudakov",
+      "email": "isudakoff@gmail.com"
+    }
+  ],
+  "autoload": {
+    "psr-4": {
+      "isudakoff\\authclient\\": ""
+    }
+  },
+  "minimum-stability": "dev"
+}
