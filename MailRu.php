@@ -11,6 +11,7 @@ namespace isudakoff\authclient;
 
 use Exception;
 use yii\authclient\OAuth2;
+use yii\helpers\Json;
 
 /**
  * In order to use Mail.ru OAuth you must register your application at <http://api.mail.ru/sites/my/add>.
@@ -47,7 +48,7 @@ class MailRu extends OAuth2
         $response = $request->send();
 
         $attributes = Json::decode($response->content);
-        return $attributes[0];
+        return reset($attributes);
     }
 
     /**
