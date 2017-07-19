@@ -41,7 +41,12 @@ class MailRu extends OAuth2
      */
     protected function initUserAttributes()
     {
-        $attributes = $this->api('users.getInfo', 'GET');
+        $request = $this->createApiRequest()
+            ->setMethod('GET')
+            ->setUrl('users.getInfo');
+        $response = $request->send();
+
+        $attributes = Json::decode($response->content);
         return $attributes[0];
     }
 
