@@ -9,7 +9,7 @@
 
 namespace isudakoff\authclient;
 
-use Exception;
+use yii\authclient\InvalidResponseException;
 use yii\authclient\OAuth2;
 
 /**
@@ -41,8 +41,15 @@ class MailRu extends OAuth2
      */
     protected function initUserAttributes()
     {
-        $attributes = $this->api('users.getInfo', 'GET');
-        return $attributes[0];
+        $request = $this->createApiRequest()->setMethod('GET')->setUrl('users.getInfo');
+        $response = $request->send();
+        $response->setFormat('json');
+
+        if ($response->isOk && $response->data && $response->data['0']) {
+            return $response->data['0'];
+        }
+
+        throw new InvalidResponseException($response);
     }
 
     /**
@@ -53,11 +60,13 @@ class MailRu extends OAuth2
         parent::applyAccessTokenToRequest($request, $accessToken);
 
         $data = $request->getData();
+
         $data['method'] = str_replace('/', '', $request->getUrl());
         $data['uids'] = $accessToken->getParam('x_mailru_vid');
         $data['app_id'] = $this->clientId;
         $data['secure'] = 1;
         $data['sig'] = $this->sig($data, $this->clientSecret);
+
         $request->setUrl('');
         $request->setData($data);
     }
@@ -70,9 +79,11 @@ class MailRu extends OAuth2
     public function sig(array $request_params, $secret_key) {
         ksort($request_params);
         $params = '';
+
         foreach ($request_params as $key => $value) {
             $params .= "$key=$value";
         }
+
         return md5($params . $secret_key);
     }
 
